@@ -1,0 +1,48 @@
+networks:
+  net:
+
+volumes:
+  neo4j-import:
+
+services:
+  neo4j:
+    image: neo4j:5.20.0-enterprise
+    hostname: neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - "./.neo4j/data:/data"
+      - "./.neo4j/logs:/logs"
+      - "neo4j-import:/import"
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD}
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_PLUGINS: '["apoc", "genai"]'
+    healthcheck:
+      test: wget http://localhost:7474 || exit 1
+      interval: 1s
+      timeout: 10s
+      retries: 20
+      start_period: 3s
+    networks:
+      - net
+
+  chatbot:
+    build:
+      context: .
+      dockerfile: chatbot.Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - "neo4j-import:/app/swiftie-lyric-bot/data"
+    environment:
+      - NEO4J_URI=${NEO4J_URI}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      - NEO4J_USERNAME=${NEO4J_USERNAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - net
+    depends_on:
+      neo4j:
+        condition: service_healthy

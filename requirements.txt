@@ -1,0 +1,10 @@
+lyricsgenius==3.0.1
+python-dotenv==1.0.1
+openai
+langchain
+langchain-community
+langchain-openai
+langchain-experimental
+neo4j
+streamlit
+youtube-search
